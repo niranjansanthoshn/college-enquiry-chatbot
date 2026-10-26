@@ -18,6 +18,9 @@ const adminRoutes = require('./routes/adminRoutes');
 
 const app = express();
 
+// Trust reverse proxy (Render, Cloudflare, Vercel)
+app.set('trust proxy', 1);
+
 // Security Middlewares
 app.use(helmet());
 
@@ -33,7 +36,14 @@ app.use(
   cors({
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps, curl, Postman)
-      if (!origin || allowedOrigins.includes(origin) || config.nodeEnv === 'development') {
+      // or origins in allowed list, or *.vercel.app, or dev localhost
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        config.nodeEnv === 'development' ||
+        origin.endsWith('.vercel.app') ||
+        origin.includes('localhost')
+      ) {
         callback(null, true);
       } else {
         callback(new Error('CORS policy: Not allowed by CORS'));
